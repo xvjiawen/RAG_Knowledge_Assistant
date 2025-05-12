@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import markdown
 import re
 import time
+from openai import OpenAI
 # Load environment variables
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
@@ -47,6 +48,24 @@ def generate_llm_summary(repo_name, readme_content,model):
     )
     return response.choices[0].message["content"]
 
+def generate_llm_summary_qwen(repo_name, readme_content,model):
+    prompt = f"1：这个仓库名是 {repo_name}. 此仓库的readme全部内容是: {readme_content}\
+               2:请用约200以内的中文概括这个仓库readme的内容,返回的概括格式要求：这个仓库名是...,这仓库内容主要是..."
+    client = OpenAI(
+        # 若没有配置环境变量，请用百炼API Key将下行替换为：api_key="sk-xxx",
+        api_key=os.environ["DASHSCOPE_API_KEY"],
+        base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+    )
+    messages = [{"role": "user", "content": prompt}]
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        temperature=0.1, # 模型输出的温度系数，控制输出的随机程度
+        top_p=0.8,
+        max_tokens = 2048, # 回复最大长度
+    )
+    return response.choices[0].message.content
+
 def main(org_name,export_dir,summary_dir,model):
     repos = get_repos(org_name, TOKEN, export_dir)
 
@@ -67,7 +86,7 @@ def main(org_name,export_dir,summary_dir,model):
             time.sleep(60)
             print('第' + str(id) + '条' + 'summary开始')
             try:
-                summary = generate_llm_summary(repo_name, readme_text,model)
+                summary = generate_llm_summary_qwen(repo_name, readme_text,model)
                 print(summary)
                 # Write summary to a Markdown file in the summary directory
                 summary_file_path = os.path.join(summary_dir, f"{repo_name}_summary.md")
@@ -94,5 +113,5 @@ if __name__ == '__main__':
     # 配置 export_dir
     export_dir = "database/readme_db"  # 请替换为实际readme的目录路径
     summary_dir="knowledge_db/readme_summary"# 请替换为实际readme的概括的目录路径
-    model="gpt-3.5-turbo"  #deepseek-chat,gpt-3.5-turbo,moonshot-v1-8k
+    model="qwen-plus-0919"  #deepseek-chat,gpt-3.5-turbo,moonshot-v1-8k
     main(org_name,export_dir,summary_dir,model)

@@ -4,6 +4,7 @@ from llm.wenxin_llm import Wenxin_LLM
 from llm.spark_llm import Spark_LLM
 from llm.zhipuai_llm import ZhipuAILLM
 from langchain.chat_models import ChatOpenAI
+from llm.qwen_llm import QwenLLM
 from llm.call_llm import parse_llm_api_key
 
 
@@ -30,6 +31,11 @@ def model_to_llm(model:str=None, temperature:float=0.0, appid:str=None, api_key:
             if api_key == None:
                 api_key = parse_llm_api_key("zhipuai")
             llm = ZhipuAILLM(model=model, zhipuai_api_key=api_key, temperature = temperature)
+        elif "qwen" in model:
+            if api_key == None:
+                api_key = parse_llm_api_key("qwen")
+            print(f"**************qwen: {model}")
+            llm = QwenLLM(model=model, api_key=api_key, temperature=temperature)
         else:
             raise ValueError(f"model{model} not support!!!")
         return llm

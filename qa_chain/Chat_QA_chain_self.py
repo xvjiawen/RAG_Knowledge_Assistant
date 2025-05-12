@@ -27,7 +27,11 @@ class Chat_QA_chain_self:
     - embeddings：使用的embedding模型
     - embedding_key：使用的embedding模型的秘钥（智谱或者OpenAI）  
     """
-    def __init__(self,model:str, temperature:float=0.0, top_k:int=4, chat_history:list=[], file_path:str=None, persist_path:str=None, appid:str=None, api_key:str=None, Spark_api_secret:str=None,Wenxin_secret_key:str=None, embedding = "openai",embedding_key:str=None):
+    def __init__(self,model:str, temperature:float=0.0, top_k:int=4,
+                 chat_history:list=[], file_path:str=None,
+                 persist_path:str=None, appid:str=None, api_key:str=None,
+                 Spark_api_secret:str=None,Wenxin_secret_key:str=None,
+                 embedding = "openai",embedding_key:str=None):
         self.model = model
         self.temperature = temperature
         self.top_k = top_k
@@ -42,8 +46,10 @@ class Chat_QA_chain_self:
         self.embedding = embedding
         self.embedding_key = embedding_key
 
-
-        self.vectordb = get_vectordb(self.file_path, self.persist_path, self.embedding,self.embedding_key)
+        print(f"**********file path: {self.file_path}, persist path: "
+              f"{self.persist_path}, embedding: {self.embedding}")
+        self.vectordb = get_vectordb(self.file_path, self.persist_path,
+                                     self.embedding,self.embedding_key)
         
     
     def clear_history(self):
@@ -78,7 +84,10 @@ class Chat_QA_chain_self:
         
         if temperature == None:
             temperature = self.temperature
-        llm = model_to_llm(self.model, temperature, self.appid, self.api_key, self.Spark_api_secret,self.Wenxin_secret_key)
+
+        print(f"*********************chat with history, model:{self.model}")
+        llm = model_to_llm(self.model, temperature, self.appid, self.api_key,
+                           self.Spark_api_secret,self.Wenxin_secret_key)
 
         #self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 

@@ -29,7 +29,7 @@ from urllib.parse import urlencode
 from wsgiref.handlers import format_date_time
 import zhipuai
 from langchain.utils import get_from_dict_or_env
-
+from openai import OpenAI
 import websocket  # 使用websocket_client
 
 def get_completion(prompt :str, model :str, temperature=0.1,api_key=None, secret_key=None, access_token=None, appid=None, api_secret=None, max_tokens=2048):
@@ -52,6 +52,8 @@ def get_completion(prompt :str, model :str, temperature=0.1,api_key=None, secret
         return get_completion_spark(prompt, model, temperature, api_key, appid, api_secret, max_tokens)
     elif model in ["chatglm_pro", "chatglm_std", "chatglm_lite"]:
         return get_completion_glm(prompt, model, temperature, api_key, max_tokens)
+    elif model in ["qwen-max", "qwen-plus"]:
+        return get_completion_qwen(prompt, model, temperature, api_key, max_tokens)
     else:
         return "不正确的模型"
     
@@ -70,6 +72,24 @@ def get_completion_gpt(prompt : str, model : str, temperature : float, api_key:s
     )
     # 调用 OpenAI 的 ChatCompletion 接口
     return response.choices[0].message["content"]
+
+def get_completion_qwen(prompt : str, model : str, temperature : float, api_key:str, max_tokens:int):
+    if api_key is None:
+        api_key = parse_llm_api_key("qwen")
+
+    client = OpenAI(
+        # 若没有配置环境变量，请用百炼API Key将下行替换为：api_key="sk-xxx",
+        api_key=api_key,
+        base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+    )
+    messages = [{"role": "user", "content": prompt}]
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        temperature=temperature, # 模型输出的温度系数，控制输出的随机程度
+        max_tokens = max_tokens, # 回复最大长度
+    )
+    return response.choices[0].message.content
 
 def get_access_token(api_key, secret_key):
     """
@@ -313,6 +333,12 @@ def parse_llm_api_key(model:str, env_file:dict()=None):
         return env_file["spark_api_key"], env_file["spark_appid"], env_file["spark_api_secret"]
     elif model == "zhipuai":
         return get_from_dict_or_env(env_file, "zhipuai_api_key", "ZHIPUAI_API_KEY")
+    elif model == "qwen":
+        return env_file["DASHSCOPE_API_KEY"]
         # return env_file["ZHIPUAI_API_KEY"]
     else:
         raise ValueError(f"model{model} not support!!!")
+
+if __name__ == '__main__':
+    get_completion_qwen(
+        "你好","qwen-max", 0.1, api_key=None, max_tokens=2048)

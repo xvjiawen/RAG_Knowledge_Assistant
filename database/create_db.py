@@ -25,6 +25,7 @@ def get_files(dir_path):
 
 
 def file_loader(file, loaders):
+    """加载文件"""
     if isinstance(file, tempfile._TemporaryFileWrapper):
         file = file.name
     if not os.path.isfile(file):
@@ -44,12 +45,15 @@ def file_loader(file, loaders):
 
 
 def create_db_info(files=DEFAULT_DB_PATH, embeddings="openai", persist_directory=DEFAULT_PERSIST_PATH):
-    if embeddings == 'openai' or embeddings == 'm3e' or embeddings =='zhipuai':
+    if (embeddings == 'openai' or embeddings == 'm3e' or embeddings =='zhipuai' or
+            embeddings =='modelscope'):
+        print(f"##########files:{files}")
         vectordb = create_db(files, persist_directory, embeddings)
     return ""
 
 
-def create_db(files=DEFAULT_DB_PATH, persist_directory=DEFAULT_PERSIST_PATH, embeddings="openai"):
+def create_db(files=DEFAULT_DB_PATH, persist_directory=DEFAULT_PERSIST_PATH,
+              embeddings="openai"):
     """
     该函数用于加载 PDF 文件，切分文档，生成文档的嵌入向量，创建向量数据库。
 
@@ -77,14 +81,32 @@ def create_db(files=DEFAULT_DB_PATH, persist_directory=DEFAULT_PERSIST_PATH, emb
     if type(embeddings) == str:
         embeddings = get_embedding(embedding=embeddings)
     # 定义持久化路径
-    persist_directory = './vector_db/chroma'
-    # 加载数据库
-    vectordb = Chroma.from_documents(
-    documents=split_docs,
-    embedding=embeddings,
-    persist_directory=persist_directory  # 允许我们将persist_directory目录保存到磁盘上
-    ) 
+    persist_directory = '/data/llm_learning/Chat_with_Datawhale_langchain/vector_db/chroma'
 
+    try:
+        vectordb = Chroma(persist_directory=persist_directory,
+                          embedding_function=embeddings)
+    except Exception as e:
+        vectordb = None
+    if vectordb is None:
+        # 新建数据库
+        print("########create new db")
+        vectordb = Chroma.from_documents(
+            documents=split_docs,
+            embedding=embeddings,
+            persist_directory=persist_directory
+        )
+    else:
+        print(f"########add documents, embeddings:{embeddings}")
+        # 已有数据库，添加新文档向量
+        vectordb.add_documents(split_docs)
+    # # 加载数据库
+    # vectordb = Chroma.from_documents(
+    # documents=split_docs,
+    # embedding=embeddings,
+    # persist_directory=persist_directory  # 允许我们将persist_directory目录保存到磁盘上
+    # )
+    # 可以持久化向量数据库到本地
     vectordb.persist()
     return vectordb
 
@@ -110,6 +132,7 @@ def load_knowledge_db(path, embeddings):
     返回:
     vectordb: 加载的数据库。
     """
+    print(f"##############persist_directory:{path}, embeddings:{embeddings}")
     vectordb = Chroma(
         persist_directory=path,
         embedding_function=embeddings
@@ -118,4 +141,5 @@ def load_knowledge_db(path, embeddings):
 
 
 if __name__ == "__main__":
-    create_db(embeddings="m3e")
+    create_db(embeddings="modelscope")
+    # create_db(embeddings="m3e")
