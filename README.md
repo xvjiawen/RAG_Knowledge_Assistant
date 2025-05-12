@@ -1,5 +1,16 @@
 # 个人知识库助手项目
 
+- 参考工程：
+  - github链接：https://github.com/logan-zou/Chat_with_Datawhale_langchain
+  - 说明文档：https://datawhalechina.github.io/llm-universe/#/C6/案例1：个人知识库助手
+  - 知乎：https://zhuanlan.zhihu.com/p/694891334
+
+- 修改部分：
+  - 增加qwen系列模型
+  - 修改ModelScopeEmbeddings
+  - 修改数据库在多次上传文档不能持久保存的问题
+
+
 ## 一、引言
 
 ### 1、项目背景介绍
@@ -52,7 +63,6 @@
   
 - **内存（RAM）**: 至少 4 GB
   
-
 - **操作系统**：Windows、macOS、Linux均可
 
 #### 1.2 项目设置
@@ -108,7 +118,7 @@ python run_gradio.py -model_name='chatglm_std' -embedding_model='m3e' -db_path='
      - [√] 新增知识库内容
      - [√] 新增 Datawhale 的所有 Md 的总结
      - [√] 修复 gradio 显示错误
- 
+
    - **目前支持的模型**
      - OpenAi
        - [√] gpt-3.5-turbo
